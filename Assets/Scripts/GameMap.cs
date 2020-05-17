@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class GameMap : MonoBehaviour
 {
@@ -15,8 +17,6 @@ public class GameMap : MonoBehaviour
     [SerializeField]
     private GameObject[] tile;
 
-    //[SerializeField]
-    //GameObject[] wall;
     [SerializeField]
     private int mapVerLenght;
 
@@ -25,6 +25,9 @@ public class GameMap : MonoBehaviour
 
     [SerializeField]
     private List<Vector3> pos;
+
+    [SerializeField]
+    public GameObject[,] gameMap;
 
     [SerializeField]
     private List<Vector3> wallDots;
@@ -49,13 +52,13 @@ public class GameMap : MonoBehaviour
      * 4 = босс
      */
     #endregion
-
-    public void generateWalls()
+    private void Awake()
     {
-    }
 
+    }
     public void GenerateMap()
     {
+        #region переменные
         if (mapHorLenght + mapVerLenght < maxRooms / 2)
         {
             mapVerLenght = maxRooms / 2;
@@ -71,6 +74,7 @@ public class GameMap : MonoBehaviour
             HorLenght = 16;
             VerLenght = 16;
         }
+        gameMap = new GameObject[mapHorLenght, mapVerLenght];
         #region old
         //leftdown = new Vector3Int(0, 0, 0);
         //lefttop = new Vector3Int(0, 15, 0);
@@ -108,42 +112,51 @@ public class GameMap : MonoBehaviour
         pos = new List<Vector3>();
         wallDots = new List<Vector3>();
         pos.Add(new Vector3(0, 0));
+        List<Vector3> busyPos = new List<Vector3>();
         var Parent = gameObject.transform.Find("Tiles");
+        #endregion
         for (int i = 0; i < maxRooms; i++)
         {
             int rand = Random.Range(0, pos.Count - 1);
+
             tile[i] = Instantiate(Resources.Load<GameObject>("Prefabs/Tile"), pos[rand], Quaternion.identity, Parent);
+            gameMap[Convert.ToInt32((pos[rand].y / (VerLenght + 1)) + (mapVerLenght / 2)), (Convert.ToInt32(pos[rand].x / (HorLenght + 1)) + (mapHorLenght / 2))] = tile[i];
+            Debug.Log("x="+(Convert.ToInt32(pos[rand].x / (HorLenght + 1)) + (mapHorLenght / 2))+ "y="+Convert.ToInt32((pos[rand].y / (VerLenght + 1)) + (mapVerLenght / 2)));
             #region if pos
             if (!pos.Contains(pos[rand] + new Vector3(HorLenght + 1, 0)))
-                pos.Add(pos[rand] + new Vector3(HorLenght + 1, 0));
-            if (!pos.Contains(pos[rand] + new Vector3(0, VerLenght + 1)))
+            {
+                if (!busyPos.Contains(pos[rand] + new Vector3(HorLenght + 1, 0)))
+                {
+                    pos.Add(pos[rand] + new Vector3(HorLenght + 1, 0));
+                }
+                else
+                {
+                    //tile[i].GetComponent<Tile>().nTile.Add(new Tile());
+
+                }
+            }
+            if (!pos.Contains(pos[rand] + new Vector3(0, VerLenght + 1)) && !busyPos.Contains(pos[rand] + new Vector3(0, VerLenght + 1)))
+            {
                 pos.Add(pos[rand] + new Vector3(0, VerLenght + 1));
-            if (!pos.Contains(pos[rand] + new Vector3((HorLenght + 1) * -1, 0)))
+            }
+            if (!pos.Contains(pos[rand] + new Vector3((HorLenght + 1) * -1, 0)) && !busyPos.Contains(pos[rand] + new Vector3((HorLenght + 1) * -1, 0)))
+            {
                 pos.Add(pos[rand] + new Vector3((HorLenght + 1) * -1, 0));
-            if (!pos.Contains(pos[rand] + new Vector3(0, (VerLenght + 1) * -1)))
+            }
+            if (!pos.Contains(pos[rand] + new Vector3(0, (VerLenght + 1) * -1)) && !busyPos.Contains(pos[rand] + new Vector3(0, (VerLenght + 1) * -1)))
+            {
                 pos.Add(pos[rand] + new Vector3(0, (VerLenght + 1) * -1));
-            #endregion
-            #region
-            //if (!wallDots.Contains(pos[rand] + new Vector3(HorLenght / 2 + 0.5f, VerLenght / 2 + 0.5f, 0)))
-            //    wallDots.Add(pos[rand] + new Vector3(HorLenght / 2 + 0.5f, VerLenght / 2 + 0.5f, 0));
-            //if (!wallDots.Contains(pos[rand] + new Vector3(HorLenght / 2 + 0.5f, VerLenght / 2 * -1 - 0.5f, 0)))
-            //    wallDots.Add(pos[rand] + new Vector3(HorLenght / 2 + 0.5f, VerLenght / 2 * -1 - 0.5f, 0));
-            //if (!wallDots.Contains(pos[rand] + new Vector3(HorLenght / 2 * -1 - 0.5f, VerLenght / 2 + 0.5f, 0)))
-            //    wallDots.Add(pos[rand] + new Vector3(HorLenght / 2 * -1 - 0.5f, VerLenght / 2 + 0.5f, 0));
-            //if (!wallDots.Contains(pos[rand] + new Vector3(HorLenght / 2 * -1 - 0.5f, VerLenght / 2 * -1 - 0.5f, 0)))
-            //    wallDots.Add(pos[rand] + new Vector3(HorLenght / 2 * -1 - 0.5f, VerLenght / 2 * -1 - 0.5f, 0));
+            }
+            busyPos.Add(pos[rand]);
             #endregion
             pos.RemoveAt(rand);
         }
-        //wall = new GameObject[wallDots.Count];
-        //Parent = gameObject.transform.Find("Walls");
-        //for (int i = 0; i < wallDots.Count; i++)
-        //{
-        //    wall[i] = Instantiate(Resources.Load<GameObject>("Prefabs/Wall"),wallDots[i],Quaternion.identity,Parent);
-        //    wall[i].transform.position = wallDots[i];
-        //}
-    }
 
+    }
+    public void GenerateRooms()
+    {
+
+    }
     private void Start()
     {
         GenerateMap();
@@ -153,15 +166,32 @@ public class GameMap : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.R))
         {
-            //for (int i = 0; i < wall.Length; i++)
-            //{
-            //    Destroy(wall[i]);
-            //}
             for (int i = 0; i < tile.Length; i++)
             {
                 Destroy(tile[i]);
             }
             GenerateMap();
         }
+        #region map generator
+        //if (Input.GetKeyDown(KeyCode.E))
+        //{
+        //    Vector3 vc = new Vector3();
+        //    Debug.ClearDeveloperConsole();
+        //    for (int x = 0; x < gameMap.GetLength(0); x++)
+        //    {
+        //        vc.x += 17;
+        //        vc.y = 0;
+        //        string tmp = "";
+        //        for (int y = 0; y < gameMap.GetLength(1); y++)
+        //        {
+        //            vc.y += 17;
+        //            if (gameMap[y, x] != null)
+        //            {
+        //                Instantiate(Resources.Load<GameObject>("Prefabs/Tile"), vc, Quaternion.identity, gameObject.transform);
+        //            }
+        //     }
+        //    Debug.Log(tmp);
+        //}}
+        #endregion
     }
 }
